@@ -13,9 +13,8 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("4dmin123");
-  const [role, setRole] = useState("System Administrator");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -34,7 +33,7 @@ export default function LoginPage() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        setErrorMessage(result.error || "Gagal masuk. Periksa username dan password.");
+        setErrorMessage(result.error || "Gagal masuk. Periksa username dan password Anda.");
         setLoading(false);
         return;
       }
@@ -50,13 +49,15 @@ export default function LoginPage() {
             loggedInAt: new Date().toISOString(),
           })
         );
+        // Set cookie session agar server/middleware dapat memvalidasi autentikasi
+        document.cookie = "telecom_auth=1; path=/; max-age=86400; SameSite=Lax";
       }
 
-      router.push("/");
+      router.replace("/");
     } catch (err: any) {
       console.error("Login request error:", err);
-      // Fallback jika API bermasalah namun kredensial admin tepat
-      if (username === "admin" && password === "4dmin123") {
+      // Fallback jika API terganggu namun kredensial admin valid
+      if (username.trim() === "admin" && password.trim() === "4dmin123") {
         if (typeof window !== "undefined") {
           localStorage.setItem(
             "telecom_user",
@@ -67,21 +68,15 @@ export default function LoginPage() {
               loggedInAt: new Date().toISOString(),
             })
           );
+          document.cookie = "telecom_auth=1; path=/; max-age=86400; SameSite=Lax";
         }
-        router.push("/");
+        router.replace("/");
       } else {
-        setErrorMessage("Terjadi gangguan jaringan saat menghubungi server.");
+        setErrorMessage("Terjadi gangguan jaringan saat menghubungi server autentikasi.");
       }
     } finally {
       setLoading(false);
     }
-  };
-
-  const selectDemoRole = (userVal: string, passVal: string, roleVal: string) => {
-    setUsername(userVal);
-    setPassword(passVal);
-    setRole(roleVal);
-    setErrorMessage("");
   };
 
   return (
@@ -117,8 +112,8 @@ export default function LoginPage() {
         <div className="bg-slate-900/85 backdrop-blur-xl border border-white/10 rounded-2xl p-7 shadow-2xl">
           <div className="flex items-center justify-between pb-5 mb-5 border-b border-white/10">
             <div>
-              <h2 className="text-sm font-semibold text-white">Login Petugas</h2>
-              <p className="text-[11px] text-gray-400">Masuk untuk mengakses data operasional 10.112 site</p>
+              <h2 className="text-sm font-semibold text-white">Login Sistem</h2>
+              <p className="text-[11px] text-gray-400">Masukkan akun terdaftar untuk mengakses dashboard</p>
             </div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               MS SQL Live
@@ -135,7 +130,7 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-[11px] font-medium text-gray-300 mb-1.5 uppercase tracking-wider">
-                ID Pengguna / Username
+                Username / Akun
               </label>
               <div className="relative">
                 <IconUser className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" stroke={1.8} />
@@ -144,6 +139,7 @@ export default function LoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
+                  autoFocus
                   className="w-full bg-slate-800/70 border border-white/10 rounded-xl px-10 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="Masukkan username Anda..."
                 />
@@ -155,9 +151,6 @@ export default function LoginPage() {
                 <label className="block text-[11px] font-medium text-gray-300 uppercase tracking-wider">
                   Kata Sandi
                 </label>
-                <span className="text-[10px] text-blue-400 font-medium cursor-pointer hover:underline">
-                  Lupa Akses?
-                </span>
               </div>
               <div className="relative">
                 <IconKey className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" stroke={1.8} />
@@ -167,7 +160,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full bg-slate-800/70 border border-white/10 rounded-xl px-10 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="••••••••"
+                  placeholder="Masukkan kata sandi..."
                 />
               </div>
             </div>
@@ -184,33 +177,12 @@ export default function LoginPage() {
                 </>
               ) : (
                 <>
-                  <span>Masuk ke Dashboard NOC</span>
+                  <span>Masuk ke Dashboard</span>
                   <IconArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" stroke={2} />
                 </>
               )}
             </button>
           </form>
-
-          {/* Quick Demo Access Roles */}
-          <div className="mt-6 pt-5 border-t border-white/5">
-            <span className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2.5 text-center">
-              ⚡ Akses Kredensial Resmi
-            </span>
-            <div className="grid grid-cols-1 gap-2">
-              <button
-                type="button"
-                onClick={() => selectDemoRole("admin", "4dmin123", "System Administrator")}
-                className={`py-2 px-3 text-[11px] font-semibold rounded-lg border transition-all flex items-center justify-between ${
-                  username === "admin"
-                    ? "border-emerald-500/80 bg-emerald-500/20 text-emerald-300"
-                    : "border-white/10 bg-slate-800/50 text-gray-400 hover:text-white hover:bg-slate-800"
-                }`}
-              >
-                <span>Akun Utama: admin</span>
-                <span className="text-[10px] font-mono text-emerald-400">PW: 4dmin123</span>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Footer Security Badges */}

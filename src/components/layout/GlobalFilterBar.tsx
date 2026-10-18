@@ -9,11 +9,6 @@ import {
   IconCheck,
   IconChevronDown,
   IconArrowBackUp,
-  IconCircleCheck,
-  IconClock,
-  IconCircleX,
-  IconStack2,
-  IconChevronRight,
 } from "@tabler/icons-react";
 import { GlobalFilterState, SearchFieldType } from "@/types/assignment";
 
@@ -159,7 +154,7 @@ export function GlobalFilterBar({
     filterState.selectedStatuses.length > 0;
 
   return (
-    <div className="glass-panel p-5 mb-6 relative z-30 border border-white/80 shadow-md">
+    <div className="glass-panel p-5 mb-6 relative z-10 border border-white/80 shadow-md">
       {/* Top Filter Controls: Categorized Search, Multi-Status, Area Selector */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         {/* Categorized Search with Typeahead Autocomplete */}
@@ -170,7 +165,7 @@ export function GlobalFilterBar({
               <button
                 type="button"
                 onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-gray-100 border-r border-gray-200 rounded-l-xl transition-colors whitespace-nowrap"
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-gray-100 border-r border-gray-200 rounded-l-xl transition-colors whitespace-nowrap cursor-pointer"
               >
                 <span>{currentCategory.label}</span>
                 <IconChevronDown className="w-3.5 h-3.5 text-gray-400" stroke={1.8} />
@@ -178,7 +173,7 @@ export function GlobalFilterBar({
 
               {/* Category Dropdown */}
               {categoryDropdownOpen && (
-                <div className="absolute left-0 top-full mt-1.5 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 p-1.5 z-50">
+                <div className="absolute left-0 top-full mt-1.5 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 p-1.5 z-20">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 py-1 block">
                     Pilih Kategori Pencarian
                   </span>
@@ -190,7 +185,7 @@ export function GlobalFilterBar({
                         setFilterState((prev) => ({ ...prev, searchField: cat.id }));
                         setCategoryDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition-colors cursor-pointer ${
                         filterState.searchField === cat.id
                           ? "bg-blue-50 text-blue-700 font-semibold"
                           : "text-gray-700 hover:bg-gray-50"
@@ -225,7 +220,7 @@ export function GlobalFilterBar({
                 <button
                   type="button"
                   onClick={() => setFilterState((prev) => ({ ...prev, searchQuery: "" }))}
-                  className="mr-3 text-gray-400 hover:text-gray-600"
+                  className="mr-3 text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
                   <IconX className="w-3.5 h-3.5" stroke={1.8} />
                 </button>
@@ -235,7 +230,7 @@ export function GlobalFilterBar({
 
           {/* Autocomplete / Typeahead Dropdown */}
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-2xl border border-gray-200 p-2 z-50">
+            <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-2xl border border-gray-200 p-2 z-20">
               <div className="flex items-center justify-between px-2.5 py-1 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase">
                 <span>Rekomendasi {currentCategory.label}</span>
                 <span>Jumlah Site</span>
@@ -246,7 +241,7 @@ export function GlobalFilterBar({
                     type="button"
                     key={item.value}
                     onClick={() => handleSelectSuggestion(item.value)}
-                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-blue-50 text-gray-800 flex items-center justify-between transition-colors group"
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-blue-50 text-gray-800 flex items-center justify-between transition-colors group cursor-pointer"
                   >
                     <span className="font-semibold text-gray-900 group-hover:text-blue-700 truncate pr-2">
                       {item.value}
@@ -267,9 +262,9 @@ export function GlobalFilterBar({
             <IconFilter className="w-3 h-3" stroke={1.8} /> Status:
           </span>
           {[
-            { id: "Acc", label: "Accepted", count: "8.957", color: "text-emerald-700" },
-            { id: "Not Yet Acc", label: "In Progress", count: "909", color: "text-amber-700" },
-            { id: "Reject", label: "Rejected", count: "268", color: "text-rose-700" },
+            { id: "Acc", label: "Accepted", count: "8.981" },
+            { id: "Not Yet Acc", label: "In Progress", count: "842" },
+            { id: "Reject", label: "Rejected", count: "289" },
           ].map((item) => {
             const isSelected = filterState.selectedStatuses.includes(item.id);
             return (
@@ -277,7 +272,7 @@ export function GlobalFilterBar({
                 type="button"
                 key={item.id}
                 onClick={() => handleStatusToggle(item.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                   isSelected
                     ? "bg-blue-600 text-white shadow-sm"
                     : "text-gray-600 bg-white/70 hover:bg-white hover:text-gray-900 border border-gray-200/50"
@@ -305,12 +300,12 @@ export function GlobalFilterBar({
           })}
         </div>
 
-        {/* Multi-Select Area Dropdown (FIX: Elevasi Z-Index Tinggi & Anti-Terhalang) */}
+        {/* Multi-Select Area Dropdown */}
         <div ref={areaDropdownRef} className="relative self-start lg:self-auto">
           <button
             type="button"
             onClick={() => setAreaDropdownOpen(!areaDropdownOpen)}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-semibold transition-all shadow-xs ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-semibold transition-all shadow-xs cursor-pointer ${
               filterState.selectedAreas.length > 0
                 ? "bg-blue-50 border-blue-300 text-blue-700"
                 : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -330,9 +325,9 @@ export function GlobalFilterBar({
             />
           </button>
 
-          {/* Area Popover Dropdown (Z-50 and Floating Cleanly Above Cards) */}
+          {/* Area Popover Dropdown */}
           {areaDropdownOpen && (
-            <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 p-3 z-50 animate-in fade-in zoom-in-95 duration-100">
+            <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
               <div className="mb-2">
                 <input
                   type="text"
@@ -381,7 +376,7 @@ export function GlobalFilterBar({
                     onClick={() =>
                       setFilterState((prev) => ({ ...prev, selectedAreas: [] }))
                     }
-                    className="text-[11px] text-rose-600 hover:underline font-semibold"
+                    className="text-[11px] text-rose-600 hover:underline font-semibold cursor-pointer"
                   >
                     Hapus Pilihan
                   </button>
@@ -399,7 +394,7 @@ export function GlobalFilterBar({
 
           {!hasActiveFilters && (
             <span className="text-[11px] text-gray-400 italic">
-              Menampilkan seluruh 10.134 site tanpa batasan filter
+              Menampilkan seluruh 10.112 site tanpa batasan filter
             </span>
           )}
 
@@ -446,7 +441,7 @@ export function GlobalFilterBar({
             <button
               type="button"
               onClick={clearAllFilters}
-              className="flex items-center gap-1 text-[11px] text-rose-600 hover:text-rose-700 font-semibold ml-2 hover:underline"
+              className="flex items-center gap-1 text-[11px] text-rose-600 hover:text-rose-700 font-semibold ml-2 hover:underline cursor-pointer"
             >
               <IconArrowBackUp className="w-3.5 h-3.5" stroke={1.8} /> Reset Semua Filter
             </button>

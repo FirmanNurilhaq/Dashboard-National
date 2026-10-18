@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { GlobalFilterBar } from "@/components/layout/GlobalFilterBar";
@@ -22,8 +23,22 @@ import {
 } from "@/types/assignment";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // 1. Guard Otentikasi: Pastikan user sudah login sebelum memuat dashboard
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedUser = localStorage.getItem("telecom_user");
+      if (!savedUser) {
+        router.replace("/login");
+      } else {
+        setIsAuthenticated(true);
+      }
+    }
+  }, [router]);
 
   // Global Filter State dengan Kategori Pencarian
   const [filterState, setFilterState] = useState<GlobalFilterState>({
@@ -41,21 +56,21 @@ export default function DashboardPage() {
 
   // Widget States
   const [kpiData, setKpiData] = useState<DashboardKpiSummary>({
-    totalAssignment: 10134,
+    totalAssignment: 10112,
     siteOnAir: 9637,
-    siteNotYetOa: 497,
-    onAirRatio: 95.1,
+    siteNotYetOa: 475,
+    onAirRatio: 95.3,
     waitingDtAudit: 472,
     totalAccepted: 8981,
     totalRejected: 311,
-    approvalRate: 88.6,
+    approvalRate: 88.8,
   });
 
   const [approvalData, setApprovalData] = useState<ApprovalRateSummary>({
     accCount: 8981,
     notYetAccCount: 842,
     rejectCount: 311,
-    approvalRatePct: 88.6,
+    approvalRatePct: 88.8,
     topRejectReasons: [],
   });
 
@@ -65,7 +80,7 @@ export default function DashboardPage() {
 
   // Data Grid Pagination State
   const [gridRows, setGridRows] = useState<Assignment[]>([]);
-  const [gridTotal, setGridTotal] = useState(10134);
+  const [gridTotal, setGridTotal] = useState(10112);
   const [gridPage, setGridPage] = useState(1);
   const [isGridLoading, setIsGridLoading] = useState(false);
 
@@ -85,16 +100,19 @@ export default function DashboardPage() {
 
   // Load Filter Options
   useEffect(() => {
-    fetch("/api/dashboard/filters")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.areas) setAvailableAreas(data.areas);
-      })
-      .catch((err) => console.error("Gagal memuat filter options:", err));
-  }, []);
+    if (isAuthenticated) {
+      fetch("/api/dashboard/filters")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.areas) setAvailableAreas(data.areas);
+        })
+        .catch((err) => console.error("Gagal memuat filter options:", err));
+    }
+  }, [isAuthenticated]);
 
   // Fetch All Analytics Data
   const fetchDashboardData = useCallback(async () => {
+    if (!isAuthenticated) return;
     setIsLoading(true);
     const qs = buildFilterQuery();
 
@@ -125,10 +143,11 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [buildFilterQuery]);
+  }, [buildFilterQuery, isAuthenticated]);
 
   // Fetch Data Grid Rows
   const fetchGridData = useCallback(async (page: number) => {
+    if (!isAuthenticated) return;
     setIsGridLoading(true);
     const qs = buildFilterQuery();
     try {
@@ -143,14 +162,16 @@ export default function DashboardPage() {
     } finally {
       setIsGridLoading(false);
     }
-  }, [buildFilterQuery]);
+  }, [buildFilterQuery, isAuthenticated]);
 
   // Trigger re-fetch on filter change
   useEffect(() => {
-    fetchDashboardData();
-    setGridPage(1);
-    fetchGridData(1);
-  }, [fetchDashboardData, fetchGridData]);
+    if (isAuthenticated) {
+      fetchDashboardData();
+      setGridPage(1);
+      fetchGridData(1);
+    }
+  }, [fetchDashboardData, fetchGridData, isAuthenticated]);
 
   const handlePageChange = (newPage: number) => {
     setGridPage(newPage);
@@ -162,7 +183,7 @@ export default function DashboardPage() {
     switch (activeTab) {
       case "sheet2":
         return {
-          title: "Sheet2 Analytics & Pivot Tracker",
+          title: "Overview Analytics & Pivot Tracker",
           subtitle: "Hierarki matriks Simple ISDP, Simple Milestone, dan Sebaran Wilayah",
         };
       case "workload":
@@ -178,7 +199,7 @@ export default function DashboardPage() {
       case "grid":
         return {
           title: "Eksplorasi Data Grid Seluruh SOW",
-          subtitle: "Tabel interaktif baris detail 10.134 site, riwayat milestone, dan kendala",
+          subtitle: "Tabel interaktif baris detail 10.112 site, riwayat milestone, dan kendala",
         };
       default:
         return {
@@ -187,6 +208,16 @@ export default function DashboardPage() {
         };
     }
   };
+
+  // Layar Pengecekan Otentikasi
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center font-sans">
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
+        <span className="text-xs text-gray-400 font-medium">Memverifikasi otentikasi sesi...</span>
+      </div>
+    );
+  }
 
   const { title, subtitle } = getTabTitle();
 
@@ -221,7 +252,7 @@ export default function DashboardPage() {
             setFilterState={setFilterState}
             availableAreas={availableAreas}
             totalFiltered={kpiData.totalAssignment}
-            totalAll={10134}
+            totalAll={10112}
           />
 
           {/* TAB 1: OVERVIEW UTAMA */}
