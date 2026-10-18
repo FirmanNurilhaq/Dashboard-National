@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: "productivity-web",
-      script: "npm",
-      args: "run start",
+      script: "node_modules/next/dist/bin/next",
+      args: "start -p 7210",
       instances: 1,
       autorestart: true,
       watch: false,
@@ -15,8 +15,8 @@ module.exports = {
     },
     {
       name: "productivity-sync-worker",
-      script: "npx",
-      args: "tsx src/workers/gsheet-sync-worker.ts",
+      script: "node_modules/tsx/dist/cli.mjs",
+      args: "src/workers/gsheet-sync-worker.ts",
       instances: 1,
       autorestart: true,
       watch: false,
