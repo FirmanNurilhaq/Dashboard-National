@@ -1,30 +1,83 @@
 import fs from "fs";
 import path from "path";
 import * as xlsx from "xlsx";
-import { cleanseAssignmentRow } from "../lib/data-cleansing";
+import {
+  cleanseAssignmentRow,
+  cleanseIsdpRow,
+  CleanedIsdpRecord,
+} from "../lib/data-cleansing";
 import { Assignment } from "../types/assignment";
 
 async function main() {
-  console.log("=== MEMULAI PARSING & DATA CLEANSING BOOK1.XLSX ===");
+  console.log("=========================================================================");
+  console.log("   MEMULAI PARSING & DATA CLEANSING TELKOMSEL NW RF TRACKER & ISDP (45)  ");
+  console.log("=========================================================================");
   const startTime = Date.now();
 
-  const filePath = path.resolve(process.cwd(), "Book1.xlsx");
+  // Tentukan path sumber file utama (utamakan Telkomsel NW RF National Tracker - National Dashboard.xlsb)
+  let filePath = path.resolve(process.cwd(), "Telkomsel NW RF National Tracker  - National Dashboard.xlsb");
   if (!fs.existsSync(filePath)) {
-    console.error(`File tidak ditemukan: ${filePath}`);
-    process.exit(1);
+    const fallbackList = [
+      path.resolve(process.cwd(), "Telkomsel NW RF National Tracker.xlsb"),
+      path.resolve(process.cwd(), "Book1.xlsx"),
+    ];
+    const found = fallbackList.find((f) => fs.existsSync(f));
+    if (found) {
+      console.warn(`File default tidak ditemukan, menggunakan alternatif: ${found}`);
+      filePath = found;
+    } else {
+      console.error(`File sumber tidak ditemukan di: ${filePath}`);
+      process.exit(1);
+    }
   }
 
-  console.log("Membaca file Book1.xlsx...");
+  console.log(`Membaca workbook dari: ${filePath}`);
   const workbook = xlsx.readFile(filePath, { cellDates: true });
-  const sheetName = workbook.SheetNames[0];
-  const sheet = workbook.Sheets[sheetName];
+  console.log(`Daftar sheet yang tersedia di file:`, workbook.SheetNames);
 
-  console.log(`Mengonversi sheet '${sheetName}' ke array baris...`);
-  const rawRows = xlsx.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-  console.log(`Total baris mentah di sheet: ${rawRows.length}`);
+  // 1. Ekstraksi Sheet "Data ISDP" jika tersedia
+  const isdpLookup = new Map<string, CleanedIsdpRecord>();
+  const isdpSheetName = workbook.SheetNames.find((s) =>
+    s.toLowerCase().includes("isdp")
+  );
 
-  const cleansedAssignments: Assignment[] = [];
+  if (isdpSheetName) {
+    console.log(`Menemukan sheet ISDP: '${isdpSheetName}'. Memulai ekstraksi...`);
+    const isdpSheet = workbook.Sheets[isdpSheetName];
+    const isdpRawRows = xlsx.utils.sheet_to_json<any[]>(isdpSheet, { header: 1 });
+    console.log(`Total baris mentah di sheet '${isdpSheetName}': ${isdpRawRows.length}`);
+
+    // Baris 0 = header, baris 1 = agregat total, data mulai dari baris 2
+    for (let i = 2; i < isdpRawRows.length; i++) {
+      const row = isdpRawRows[i];
+      const cleaned = cleanseIsdpRow(row);
+      if (cleaned && cleaned.duId) {
+        isdpLookup.set(cleaned.duId, cleaned);
+      }
+    }
+    console.log(`Berhasil mengekstrak ${isdpLookup.size} record unik ISDP untuk pencocokan.`);
+  } else {
+    console.warn(`Sheet 'Data ISDP' tidak ditemukan, melanjutkan tanpa integrasi ISDP.`);
+  }
+
+  // 2. Ekstraksi Sheet Utama "Telkomsel NW RF National Tracke"
+  const masterSheetName =
+    workbook.SheetNames.find(
+      (s) =>
+        s.toLowerCase().includes("tracke") ||
+        s.toLowerCase().includes("national") ||
+        s.toLowerCase().includes("telkomsel")
+    ) || workbook.SheetNames[0];
+
+  console.log(`Mengonversi master sheet: '${masterSheetName}' ke array baris...`);
+  const masterSheet = workbook.Sheets[masterSheetName];
+  const rawRows = xlsx.utils.sheet_to_json<any[]>(masterSheet, { header: 1 });
+  console.log(`Total baris mentah di sheet '${masterSheetName}': ${rawRows.length}`);
+
+  const assignmentMap = new Map<string, Assignment>();
+  let duplicateCount = 0;
   let skippedEmpty = 0;
+  let isdpMatchedCount = 0;
 
   // Baris 0 adalah Header
   for (let i = 1; i < rawRows.length; i++) {
@@ -34,18 +87,28 @@ async function main() {
       continue;
     }
 
-    const cleansed = cleanseAssignmentRow(raw, i);
+    const cleansed = cleanseAssignmentRow(raw, i, isdpLookup);
     if (cleansed) {
-      cleansedAssignments.push(cleansed);
+      if (cleansed.isdpMatched) {
+        isdpMatchedCount++;
+      }
+      if (assignmentMap.has(cleansed.recordId)) {
+        duplicateCount++;
+      }
+      // Aturan Deduplikasi: Baris paling baru menimpa baris lama
+      assignmentMap.set(cleansed.recordId, cleansed);
     } else {
       skippedEmpty++;
     }
   }
 
-  console.log(`Total baris data valid berhasil di-cleanse: ${cleansedAssignments.length}`);
+  const cleansedAssignments = Array.from(assignmentMap.values());
+  console.log(`Total baris unik berhasil di-cleanse: ${cleansedAssignments.length}`);
+  console.log(`Total baris duplikasi di-handle: ${duplicateCount}`);
+  console.log(`Total baris yang berhasil di-match dengan Data ISDP: ${isdpMatchedCount}`);
   console.log(`Total baris kosong/dilewati: ${skippedEmpty}`);
 
-  // Simpan ke src/data/assignments.json
+  // 3. Simpan ke src/data/assignments.json
   const outputDir = path.resolve(process.cwd(), "src", "data");
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
@@ -54,22 +117,30 @@ async function main() {
   const outputPath = path.join(outputDir, "assignments.json");
   fs.writeFileSync(outputPath, JSON.stringify(cleansedAssignments, null, 2), "utf-8");
 
-  // Buat juga summary metadata
+  // 4. Hitung & simpan summary metadata
   const metadataPath = path.join(outputDir, "summary-metadata.json");
   const areas = Array.from(new Set(cleansedAssignments.map((a) => a.area))).sort();
-  const milestones = Array.from(new Set(cleansedAssignments.map((a) => a.milestoneNw))).sort();
+  const milestones = Array.from(
+    new Set(cleansedAssignments.map((a) => a.milestoneNw))
+  ).sort();
 
   const totalAccepted = cleansedAssignments.filter((a) => a.finalStatus === "Acc").length;
   const totalRejected = cleansedAssignments.filter((a) => a.finalStatus === "Reject").length;
   const totalOa = cleansedAssignments.filter((a) => a.statusOa === "On Air").length;
+  const totalDtDone = cleansedAssignments.filter((a) => a.statusDt === "Done").length;
 
   const metadata = {
+    dataSource: path.basename(filePath),
+    masterSheet: masterSheetName,
+    isdpSheet: isdpSheetName || null,
     totalRecords: cleansedAssignments.length,
+    isdpMatchedRecords: isdpMatchedCount,
     totalAccepted,
     totalRejected,
     totalNotYetAcc: cleansedAssignments.length - totalAccepted - totalRejected,
     totalOnAir: totalOa,
     totalNotYetOa: cleansedAssignments.length - totalOa,
+    totalDtDone,
     approvalRate: ((totalAccepted / cleansedAssignments.length) * 100).toFixed(2) + "%",
     areas,
     milestones,
@@ -81,10 +152,10 @@ async function main() {
 
   console.log(`Berhasil menyimpan ${cleansedAssignments.length} record ke: ${outputPath}`);
   console.log(`Summary Metadata:`, metadata);
-  console.log(`Selesai dalam ${Date.now() - startTime}ms.`);
+  console.log(`Proses selesai dalam ${Date.now() - startTime}ms.`);
 }
 
 main().catch((err) => {
-  console.error("Gagal melakukan parsing Book1.xlsx:", err);
+  console.error("Gagal melakukan parsing data Telkomsel Tracker:", err);
   process.exit(1);
 });

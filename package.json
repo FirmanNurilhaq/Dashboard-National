@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "next dev -p 7210",
     "build": "next build",
-    "start": "next start -p 3000",
+    "start": "next start -p 7210",
     "lint": "next lint",
     "parse:data": "tsx src/scripts/parse-local-data.ts",
     "seed:excel": "tsx src/scripts/seed-from-excel.ts",

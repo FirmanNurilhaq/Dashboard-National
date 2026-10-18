@@ -3,13 +3,13 @@
 import React from "react";
 import {
   IconLayoutDashboard,
-  IconTrendingUp,
+  IconTable,
   IconChartBar,
   IconBuilding,
-  IconTable,
   IconChevronLeft,
   IconChevronRight,
   IconBroadcast,
+  IconDatabase,
 } from "@tabler/icons-react";
 
 interface SidebarProps {
@@ -33,10 +33,10 @@ export function Sidebar({
       desc: "Ringkasan KPI",
     },
     {
-      id: "velocity",
-      label: "Tren Velocity",
-      icon: IconTrendingUp,
-      desc: "Kecepatan Penyelesaian",
+      id: "sheet2",
+      label: "Sheet2 Analytics",
+      icon: IconDatabase,
+      desc: "Pivot ISDP & Milestone",
     },
     {
       id: "workload",
@@ -147,12 +147,12 @@ export function Sidebar({
         </div>
       </div>
 
-      {/* Clean Footer (SLA text completely removed) */}
+      {/* Clean Footer */}
       <div className="p-3.5 border-t border-gray-100 bg-gray-50/60 text-center">
         {!collapsed ? (
           <div className="text-left px-1">
             <p className="text-[11px] font-semibold text-gray-700">Nexwave Systems v2.4</p>
-            <p className="text-[10px] text-gray-400">Assignment Telemetry Engine</p>
+            <p className="text-[10px] text-gray-400">Telkomsel NW RF Telemetry</p>
           </div>
         ) : (
           <div className="w-2 h-2 rounded-full bg-blue-600 mx-auto" />

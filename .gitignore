@@ -22,6 +22,9 @@ yarn-error.log*
 Thumbs.db
 *.pem
 
+# archives
+*.zip
+
 # local env overrides
 .env.local
 .env.development.local

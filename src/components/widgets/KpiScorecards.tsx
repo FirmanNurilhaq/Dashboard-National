@@ -3,12 +3,9 @@
 import React, { useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  IconTrendingUp,
-  IconTrendingDown,
   IconBroadcast,
   IconClock,
   IconCircleCheck,
-  IconCircleX,
   IconFolders,
 } from "@tabler/icons-react";
 import { DashboardKpiSummary } from "@/types/assignment";
@@ -22,8 +19,6 @@ interface TiltCardProps {
   value: string | number;
   subtitle: string;
   icon: any;
-  trend: string;
-  trendUp: boolean;
   colorClass: string;
   delay: number;
   sparklineData: number[];
@@ -34,8 +29,6 @@ function TiltCard({
   value,
   subtitle,
   icon: Icon,
-  trend,
-  trendUp,
   colorClass,
   delay,
   sparklineData,
@@ -118,18 +111,6 @@ function TiltCard({
 
         <div className="flex items-baseline gap-2 mb-1">
           <span className="text-2xl font-bold text-gray-900 tracking-tight">{value}</span>
-          <span
-            className={`text-[11px] font-semibold flex items-center ${
-              trendUp ? "text-emerald-600" : "text-rose-600"
-            }`}
-          >
-            {trendUp ? (
-              <IconTrendingUp className="w-3.5 h-3.5 mr-0.5 inline" stroke={2} />
-            ) : (
-              <IconTrendingDown className="w-3.5 h-3.5 mr-0.5 inline" stroke={2} />
-            )}
-            {trend}
-          </span>
         </div>
 
         <p className="text-[11px] text-gray-400 font-medium truncate">{subtitle}</p>
@@ -141,12 +122,10 @@ function TiltCard({
 export function KpiScorecards({ data }: KpiScorecardsProps) {
   const cards = [
     {
-      title: "Total Assignment",
+      title: "Total SOW",
       value: data.totalAssignment.toLocaleString(),
-      subtitle: "Kunci Kategori DU ID Nasional",
+      subtitle: "Scope of Work DU ID Nasional",
       icon: IconFolders,
-      trend: "+4.8%",
-      trendUp: true,
       colorClass: "text-blue-600 bg-blue-600",
       delay: 1,
       sparklineData: [45, 52, 49, 60, 68, 74, 82],
@@ -154,10 +133,8 @@ export function KpiScorecards({ data }: KpiScorecardsProps) {
     {
       title: "Site On Air",
       value: data.siteOnAir.toLocaleString(),
-      subtitle: `${data.onAirRatio}% dari Total (NY OA: ${data.siteNotYetOa})`,
+      subtitle: `${data.onAirRatio}% dari Total SOW (NY OA: ${data.siteNotYetOa})`,
       icon: IconBroadcast,
-      trend: "+6.2%",
-      trendUp: true,
       colorClass: "text-emerald-600 bg-emerald-600",
       delay: 2,
       sparklineData: [30, 42, 50, 58, 64, 72, 85],
@@ -167,8 +144,6 @@ export function KpiScorecards({ data }: KpiScorecardsProps) {
       value: data.waitingDtAudit.toLocaleString(),
       subtitle: "Backlog Tahap Operasional Lapangan",
       icon: IconClock,
-      trend: "-2.1%",
-      trendUp: false,
       colorClass: "text-amber-600 bg-amber-600",
       delay: 3,
       sparklineData: [60, 58, 55, 50, 48, 42, 38],
@@ -178,27 +153,14 @@ export function KpiScorecards({ data }: KpiScorecardsProps) {
       value: data.totalAccepted.toLocaleString(),
       subtitle: `${data.approvalRate}% Approval Rate Nasional`,
       icon: IconCircleCheck,
-      trend: "+8.5%",
-      trendUp: true,
-      colorClass: "text-emerald-600 bg-emerald-600",
+      colorClass: "text-purple-600 bg-purple-600",
       delay: 4,
       sparklineData: [20, 35, 48, 65, 75, 82, 92],
-    },
-    {
-      title: "Total Rejected",
-      value: data.totalRejected.toLocaleString(),
-      subtitle: "Kendala SIK, Core, atau Permit",
-      icon: IconCircleX,
-      trend: "-1.4%",
-      trendUp: false,
-      colorClass: "text-rose-600 bg-rose-600",
-      delay: 5,
-      sparklineData: [15, 14, 18, 12, 10, 8, 7],
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       {cards.map((card) => (
         <TiltCard key={card.title} {...card} />
       ))}

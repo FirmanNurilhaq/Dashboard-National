@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { GlobalFilterBar } from "@/components/layout/GlobalFilterBar";
 import { KpiScorecards } from "@/components/widgets/KpiScorecards";
-import { VelocityTrendChart } from "@/components/widgets/VelocityTrendChart";
+import { Sheet2Analytics } from "@/components/widgets/Sheet2Analytics";
 import { ApprovalRateDonut } from "@/components/widgets/ApprovalRateDonut";
 import { PipelineFunnelChart } from "@/components/widgets/PipelineFunnelChart";
 import { AreaStackedBarChart } from "@/components/widgets/AreaStackedBarChart";
@@ -14,7 +14,6 @@ import { InteractiveDataGrid } from "@/components/widgets/InteractiveDataGrid";
 import {
   Assignment,
   DashboardKpiSummary,
-  VelocityTrendPoint,
   ApprovalRateSummary,
   FunnelStage,
   AreaDistribution,
@@ -43,21 +42,20 @@ export default function DashboardPage() {
   // Widget States
   const [kpiData, setKpiData] = useState<DashboardKpiSummary>({
     totalAssignment: 10134,
-    siteOnAir: 9562,
-    siteNotYetOa: 572,
-    onAirRatio: 94.4,
-    waitingDtAudit: 187,
-    totalAccepted: 8957,
-    totalRejected: 268,
-    approvalRate: 88.4,
+    siteOnAir: 9637,
+    siteNotYetOa: 497,
+    onAirRatio: 95.1,
+    waitingDtAudit: 472,
+    totalAccepted: 8981,
+    totalRejected: 311,
+    approvalRate: 88.6,
   });
 
-  const [velocityData, setVelocityData] = useState<VelocityTrendPoint[]>([]);
   const [approvalData, setApprovalData] = useState<ApprovalRateSummary>({
-    accCount: 8957,
-    notYetAccCount: 909,
-    rejectCount: 268,
-    approvalRatePct: 88.4,
+    accCount: 8981,
+    notYetAccCount: 842,
+    rejectCount: 311,
+    approvalRatePct: 88.6,
     topRejectReasons: [],
   });
 
@@ -101,18 +99,16 @@ export default function DashboardPage() {
     const qs = buildFilterQuery();
 
     try {
-      const [kpiRes, velRes, appRes, funRes, workRes, mapRes] = await Promise.all([
+      const [kpiRes, appRes, funRes, workRes, mapRes] = await Promise.all([
         fetch(`/api/dashboard/kpi?${qs}`),
-        fetch(`/api/dashboard/velocity-trend?${qs}`),
         fetch(`/api/dashboard/approval-rate?${qs}`),
         fetch(`/api/dashboard/funnel?${qs}`),
         fetch(`/api/dashboard/workload?${qs}`),
         fetch(`/api/dashboard/map-points?${qs}`),
       ]);
 
-      const [kpi, vel, app, fun, work, map] = await Promise.all([
+      const [kpi, app, fun, work, map] = await Promise.all([
         kpiRes.json(),
-        velRes.json(),
         appRes.json(),
         funRes.json(),
         workRes.json(),
@@ -120,7 +116,6 @@ export default function DashboardPage() {
       ]);
 
       if (!kpi.error) setKpiData(kpi);
-      if (Array.isArray(vel)) setVelocityData(vel);
       if (!app.error) setApprovalData(app);
       if (Array.isArray(fun)) setFunnelData(fun);
       if (Array.isArray(work)) setWorkloadData(work);
@@ -162,13 +157,13 @@ export default function DashboardPage() {
     fetchGridData(newPage);
   };
 
-  // Judul Halaman Sesuai Tab Aktif: Nexwave Productivity Dashboard
+  // Judul Halaman Sesuai Tab Aktif
   const getTabTitle = () => {
     switch (activeTab) {
-      case "velocity":
+      case "sheet2":
         return {
-          title: "Tren Velocity & Pipeline Funnel",
-          subtitle: "Analitik ritme harian konversi alur kerja operasional telekomunikasi",
+          title: "Sheet2 Analytics & Pivot Tracker",
+          subtitle: "Hierarki matriks Simple ISDP, Simple Milestone, dan Sebaran Wilayah",
         };
       case "workload":
         return {
@@ -182,13 +177,13 @@ export default function DashboardPage() {
         };
       case "grid":
         return {
-          title: "Eksplorasi Data Grid Seluruh Assignment",
+          title: "Eksplorasi Data Grid Seluruh SOW",
           subtitle: "Tabel interaktif baris detail 10.134 site, riwayat milestone, dan kendala",
         };
       default:
         return {
-          title: "Nexwave Productivity Dashboard",
-          subtitle: "Pusat Kendali Eksekutif Pemantauan Alur Kerja Operasional Telekomunikasi",
+          title: "Telkomsel NW RF National Productivity Dashboard",
+          subtitle: "Pusat Kendali Eksekutif Pemantauan SOW Alur Kerja Operasional Telekomunikasi",
         };
     }
   };
@@ -197,7 +192,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] flex font-sans">
-      {/* Sidebar Navigation dengan Status Collapse Sinkron */}
+      {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -205,7 +200,7 @@ export default function DashboardPage() {
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      {/* Main Content Area: AUTO-ADJUST LEBAR KETIKA SIDEBAR COLLAPSED */}
+      {/* Main Content Area */}
       <div
         className={`flex-1 transition-all duration-300 min-w-0 ${
           sidebarCollapsed ? "ml-20" : "ml-64"
@@ -220,7 +215,7 @@ export default function DashboardPage() {
         />
 
         <main className="p-6 max-w-[1600px] mx-auto">
-          {/* Global Filter Bar Intuitif dengan Autocomplete & Multi-Select */}
+          {/* Global Filter Bar */}
           <GlobalFilterBar
             filterState={filterState}
             setFilterState={setFilterState}
@@ -232,30 +227,26 @@ export default function DashboardPage() {
           {/* TAB 1: OVERVIEW UTAMA */}
           {activeTab === "overview" && (
             <>
-              {/* Row 1: KPI Scorecards (5 Cards, 3D Tilt) */}
+              {/* Row 1: KPI Scorecards (4 Cards: Total SOW, Site On Air, Menunggu DT & Audit, Total Accepted) */}
               <KpiScorecards data={kpiData} />
 
-              {/* Row 2: Main Visualization (Span 8) & Secondary Donut (Span 4) */}
+              {/* Row 2: Sheet2 Analytics Suite (Pivot Matrix Table & 3 Bar Charts) */}
+              <Sheet2Analytics />
+
+              {/* Row 3: Pipeline Funnel, Donut Approval Rate & Stacked Workload */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-                <div className="lg:col-span-8">
-                  <VelocityTrendChart data={velocityData} />
-                </div>
                 <div className="lg:col-span-4">
                   <ApprovalRateDonut data={approvalData} />
                 </div>
-              </div>
-
-              {/* Row 3: Pipeline Funnel (Span 5) & Stacked Area Workload (Span 7) */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-                <div className="lg:col-span-5">
+                <div className="lg:col-span-4">
                   <PipelineFunnelChart data={funnelData} />
                 </div>
-                <div className="lg:col-span-7">
+                <div className="lg:col-span-4">
                   <AreaStackedBarChart data={workloadData} />
                 </div>
               </div>
 
-              {/* Row 4: Peta 3D dengan Gedung & Menara BTS */}
+              {/* Row 4: Peta 3D Geospasial dengan Gedung & Menara BTS */}
               <div className="mb-6">
                 <GeospatialMap3D points={mapPoints} />
               </div>
@@ -274,20 +265,16 @@ export default function DashboardPage() {
             </>
           )}
 
-          {/* TAB 2: TREN VELOCITY & PIPELINE */}
-          {activeTab === "velocity" && (
+          {/* TAB 2: SHEET2 ANALYTICS */}
+          {activeTab === "sheet2" && (
             <div className="space-y-6">
               <KpiScorecards data={kpiData} />
+              <Sheet2Analytics />
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-8">
-                  <VelocityTrendChart data={velocityData} />
-                </div>
-                <div className="lg:col-span-4">
+                <div className="lg:col-span-6">
                   <PipelineFunnelChart data={funnelData} />
                 </div>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-12">
+                <div className="lg:col-span-6">
                   <ApprovalRateDonut data={approvalData} />
                 </div>
               </div>
@@ -312,7 +299,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* TAB 4: PETA SITE 3D DENGAN GEDUNG */}
+          {/* TAB 4: PETA SITE 3D */}
           {activeTab === "map3d" && (
             <div className="space-y-6">
               <KpiScorecards data={kpiData} />

@@ -1,4 +1,5 @@
 export interface Assignment {
+  // Primary Identifier
   recordId: string;
   pmoUniq: string | null;
   duId: string;
@@ -16,13 +17,36 @@ export interface Assignment {
   oaDate: string | null;
   dtDate: string | null;
   auditDate: string | null;
-  reportSubmitDate: string | null;
-  accDate: string | null;
+  qcAcceptedDoneReview: string | null;
+  qcRfDate: string | null;
   rfCatIssueLevel2: string | null;
+  picProgressRf: string | null;
   picRf: string | null;
   isdpStatus: string | null;
   remark: string | null;
   milestoneNw: string;
+  issueDtAudit: string | null;
+  aging: number | null;
+  agingCategory: string | null;
+  currentStatusIsdp: string | null;
+  simpleIsdp: string | null;
+  simpleMilestone: string | null;
+
+  // 9 Kolom Ekstraksi Sheet Data ISDP
+  isdpPoNo: string | null;
+  isdpQcRfDate: string | null;
+  isdpQcRf: string | null;
+  isdpSaplo: string | null;
+  isdpRemark: string | null;
+  isdpAging: number | null;
+  isdpArea: string | null;
+  isdpAppendixSimpleIsdp: string | null;
+  isdpAppendixSimpleMilestone: string | null;
+  isdpMatched?: boolean;
+
+  // Kolom Turunan Operasional & Audit
+  reportSubmitDate: string | null;
+  accDate: string | null;
   coordinateRaw: string | null;
   extraCol1: string | null;
   extraCol2: string | null;
@@ -30,6 +54,8 @@ export interface Assignment {
   statusDt: 'Done' | 'NY DT';
   finalStatus: 'Acc' | 'Not Yet Acc' | 'Reject';
   rowHash: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DashboardKpiSummary {
