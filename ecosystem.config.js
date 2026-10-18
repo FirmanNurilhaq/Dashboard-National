@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: "productivity-web",
-      script: "node_modules/next/dist/bin/next",
-      args: "start -p 7210",
+      script: "npm",
+      args: "run start",
       instances: 1,
       autorestart: true,
       watch: false,
